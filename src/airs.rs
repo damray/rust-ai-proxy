@@ -48,7 +48,7 @@ pub struct ScanResponse {
     pub tr_id: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PromptDetection {
     pub dlp: bool,
     pub injection: bool,
@@ -57,7 +57,7 @@ pub struct PromptDetection {
     pub url_cats: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ResponseDetection {
     pub dlp: bool,
     pub malicious_code: bool,
