@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_MODELS_PATH=/models
+    volumes:
+      - ollama_models:/models
+
+  rust_ai_proxy:
+    build: .
+    container_name: rust_ai_proxy
+    ports:
+      - "3000:3000"
+    environment:
+      - PANW_X_PAN_TOKEN=${PANW_X_PAN_TOKEN}
+      - PANW_PROFILE_ID=${PANW_PROFILE_ID}
+      - PANW_PROFILE_NAME=${PANW_PROFILE_NAME}
+    depends_on:
+      - ollama
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_API_BASE_URL=http://rust_ai_proxy:3000
+      - OLLAMA_BASE_URL=http://rust_ai_proxy:3000
+    depends_on:
+      - rust_ai_proxy
+    volumes:
+      - openwebui_data:/app/backend/data
+
+volumes:
+  ollama_models:
+  openwebui_data:

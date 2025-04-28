@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 use anyhow::Result;
 use reqwest::Client;
-use uuid::Uuid;
+use serde::{Deserialize, Serialize};
 use std::env;
+use uuid::Uuid;
 
 /// Structure pour envoyer une requête à AIRS
 #[derive(Serialize, Debug)]
@@ -86,11 +86,14 @@ pub async fn scan_with_airs(prompt: String, response: String) -> Result<ScanResp
         },
         contents: vec![Content {
             prompt,
-            response,
-            code_prompt: "".to_string(),
-            code_response: "".to_string(),
+            response: "String".to_string(),
+            code_prompt: "String".to_string(),
+            code_response: "String".to_string(),
         }],
     };
+
+    let pretty_payload = serde_json::to_string_pretty(&payload)?;
+    println!("📦 Payload envoyé à AIRS :\n{}", pretty_payload);
 
     let client = Client::new();
 

@@ -1,1 +1,8 @@
 /target
+.env
+/target
+**/*.rs.bk
+Cargo.lock
+
+# Docker
+/docker-compose.override.yml
