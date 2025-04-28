@@ -1,6 +1,6 @@
 use axum::body::to_bytes;
 use axum::{
-    body::{Body, Bytes},
+    body::Body,
     extract::{Json, Request},
     http::StatusCode,
     response::Response,
