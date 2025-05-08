@@ -8,6 +8,8 @@ services:
       - OLLAMA_MODELS_PATH=/models
     volumes:
       - ollama_models:/models
+    networks:
+      - ai-net
 
   rust_ai_proxy:
     build: .
@@ -20,6 +22,8 @@ services:
       - PANW_PROFILE_NAME=${PANW_PROFILE_NAME}
     depends_on:
       - ollama
+    networks:
+      - ai-net
 
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
@@ -33,7 +37,13 @@ services:
       - rust_ai_proxy
     volumes:
       - openwebui_data:/app/backend/data
+    networks:
+      - ai-net
 
 volumes:
   ollama_models:
   openwebui_data:
+
+networks:
+  ai-net:
+    driver: bridge

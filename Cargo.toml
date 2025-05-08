@@ -14,7 +14,4 @@ hyper = "1.2" # Pour Body / Request manipulation
 anyhow = "1.0"
 uuid = { version = "1", features = ["v4"] }
 futures-util = "0.3"
-
-[http]
-check-revoke = false
-ssl-version.min = "tlsv1.1"
+chrono = { version = "0.4", features = ["serde"] }
