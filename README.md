@@ -12,7 +12,7 @@ It scans prompts and responses for threats in real time before sending them to t
 
 ---
 
-## 📦 Features
+## Features
 
 | Feature                     | Description                                                          |
 | --------------------------- | -------------------------------------------------------------------- |
@@ -24,7 +24,7 @@ It scans prompts and responses for threats in real time before sending them to t
 
 ---
 
-## 🧰 Tech stack
+## Tech stack
 
 * `Rust` + `axum` — async web server / router
 * `reqwest` — for outgoing API calls to AIRS and Ollama
@@ -34,7 +34,7 @@ It scans prompts and responses for threats in real time before sending them to t
 
 ---
 
-## 🚀 How it works
+## How it works
 
 ```text
 [User via OpenWebUI] ➜ [Rust Proxy] ➜ (Prompt scanned by AIRS)
@@ -105,14 +105,14 @@ Then open [http://localhost:8080](http://localhost:8080) to access OpenWebUI.
 
 ---
 
-## 🔐 Example AIRS Scan Result (blocked)
+## Example AIRS Scan Result (blocked)
 
 ```json
 {
   "status": "blocked",
-  "message": "⛔ Réponse bloquée par la sécurité AI Palo Alto Networks.",
+  "message": "⛔ The answer has been blocked by AI Runtime Analysis.",
   "reason": "toxic_content",
-  "suggestion": "Reformulez votre question pour éviter le contenu inapproprié."
+  "suggestion": "Please modify your question and avoid any toxic_content"
 }
 ```
 
@@ -121,7 +121,6 @@ Then open [http://localhost:8080](http://localhost:8080) to access OpenWebUI.
 ## 📣 TODO
 
 * [ ] Add support for streaming responses from Ollama via SSE
-* [ ] Add logging to external SIEM
 * [ ] Add retry & timeout policy for model and AIRS requests
 * [ ] Add unit tests and error tracing
 
