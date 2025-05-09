@@ -1,39 +1,22 @@
-use std::env;
-use anyhow::Result;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::env;
 use uuid::Uuid;
+use reqwest::Client;
 
-#[derive(Debug, Serialize)]
-struct AiProfile {
-    profile_id: String,
-    profile_name: String,
+#[derive(Debug, Deserialize)]
+pub struct ScanResponse {
+    pub action: String,
+    pub category: String,
+    pub prompt_detected: PromptDetection,
+    pub response_detected: ResponseDetection,
+    pub report_id: String,
+    pub scan_id: String,
+    pub tr_id: String,
+    pub profile_id: String,
+    pub profile_name: String,
 }
 
-#[derive(Debug, Serialize)]
-struct Metadata {
-    app_name: String,
-    app_user: String,
-    ai_model: String,
-}
-
-#[derive(Debug, Serialize)]
-struct Content {
-    prompt: String,
-    response: String,
-    code_prompt: String,
-    code_response: String,
-}
-
-#[derive(Debug, Serialize)]
-struct ScanRequest {
-    tr_id: String,
-    ai_profile: AiProfile,
-    metadata: Metadata,
-    contents: Vec<Content>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct PromptDetection {
     pub dlp: bool,
     pub injection: bool,
@@ -42,7 +25,7 @@ pub struct PromptDetection {
     pub url_cats: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ResponseDetection {
     pub dlp: bool,
     pub malicious_code: bool,
@@ -50,34 +33,42 @@ pub struct ResponseDetection {
     pub url_cats: bool,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct ScanResponse {
-    pub action: String,
-    pub category: String,
-    pub profile_id: String,
-    pub profile_name: String,
-    pub prompt_detected: PromptDetection,
-    pub response_detected: ResponseDetection,
-    pub report_id: String,
-    pub scan_id: String,
-    pub tr_id: String,
+#[derive(Serialize)]
+struct ScanRequest {
+    tr_id: String,
+    ai_profile: AiProfile,
+    metadata: Metadata,
+    contents: Vec<Content>,
 }
 
-/// Nettoie une chaîne vide ou whitespace, en remplaçant par "<vide>"
-fn sanitize_field(s: &str) -> String {
-    if s.trim().is_empty() {
-        "<vide>".to_string()
-    } else {
-        s.to_string()
-    }
+#[derive(Serialize)]
+struct AiProfile {
+    profile_id: String,
+    profile_name: String,
 }
 
-pub async fn scan_with_airs(prompt: String, response: String) -> Result<ScanResponse> {
-    let x_pan_token = env::var("PANW_X_PAN_TOKEN")?;
-    let profile_id = env::var("PANW_PROFILE_ID")?;
-    let profile_name = env::var("PANW_PROFILE_NAME")?;
+#[derive(Serialize)]
+struct Metadata {
+    app_name: String,
+    app_user: String,
+    ai_model: String,
+}
 
+#[derive(Serialize)]
+struct Content {
+    prompt: String,
+    response: String,
+    code_prompt: String,
+    code_response: String,
+}
+
+pub async fn scan_with_airs(prompt: String, response: String, code_prompt: String, code_response: String) -> Result<ScanResponse, String> {
+    let x_pan_token = env::var("PANW_X_PAN_TOKEN").map_err(|e| e.to_string())?;
+    let profile_id = env::var("PANW_PROFILE_ID").map_err(|e| e.to_string())?;
+    let profile_name = env::var("PANW_PROFILE_NAME").map_err(|e| e.to_string())?;
     let tr_id = Uuid::new_v4().to_string();
+
+    println!("🔍 Envoi vers AIRS (tr_id: {})...", tr_id);
 
     let payload = ScanRequest {
         tr_id: tr_id.clone(),
@@ -91,14 +82,24 @@ pub async fn scan_with_airs(prompt: String, response: String) -> Result<ScanResp
             ai_model: "Ollama3".to_string(),
         },
         contents: vec![Content {
-            prompt: sanitize_field(&prompt),
-            response: sanitize_field(&response),
-            code_prompt: "<vide>".to_string(),
-            code_response: "<vide>".to_string(),
+            prompt,
+            response: if response.trim().is_empty() {
+                "N/A".to_string()
+            } else {
+                response
+            },
+            code_prompt: if code_prompt.trim().is_empty() {
+                "N/A".to_string()
+            } else {
+                code_prompt
+            },
+            code_response: if code_response.trim().is_empty() {
+                "N/A".to_string()
+            } else {
+                code_response
+            },
         }],
     };
-
-    println!("🔍 Envoi vers AIRS (tr_id: {})...", tr_id);
 
     let client = Client::new();
     let res = client
@@ -108,23 +109,20 @@ pub async fn scan_with_airs(prompt: String, response: String) -> Result<ScanResp
         .header("x-pan-token", x_pan_token)
         .json(&payload)
         .send()
-        .await;
+        .await
+        .map_err(|e| format!("Erreur HTTP: {}", e))?;
 
-    match res {
-        Ok(r) => {
-            let status = r.status();
-            if !status.is_success() {
-                let body = r.text().await.unwrap_or_default();
-                println!("❌ Réponse AIRS NOK [{}]: {}", status, body);
-                anyhow::bail!("AIRS scan failed ({}): {}", status, body);
-            }
-            println!("✅ Réponse AIRS OK [{}]", status);
-            let parsed: ScanResponse = r.json().await?;
-            Ok(parsed)
-        }
-        Err(e) => {
-            println!("❌ Erreur d'envoi vers AIRS : {}", e);
-            Err(anyhow::anyhow!(e))
-        }
+    let status = res.status();
+    let body = res.text().await.map_err(|e| format!("Erreur body: {}", e))?;
+
+    if status != 200 {
+        println!("❌ Réponse AIRS NOK [{}]: {}", status, body);
+        return Err(format!("Erreur AIRS: {}", body));
     }
+
+    let parsed: ScanResponse = serde_json::from_str(&body)
+        .map_err(|e| format!("Erreur parsing JSON AIRS: {}", e))?;
+
+    println!("✅ Réponse AIRS OK [{}]", status);
+    Ok(parsed)
 }
