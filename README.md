@@ -21,6 +21,7 @@ It scans prompts and responses for threats in real time before sending them to t
 | 🔁 Transparent forwarding   | All other API calls are transparently proxied to Ollama              |
 | 🔐 Security-aware responses | Blocks malicious, toxic or sensitive content based on AIRS detection |
 | 🐳 Dockerized               | Fully containerized with support for corporate CA certificates       |
+| ✅ Log                      | Every Prompt scanned and Response are logged locally for demo and TS |
 
 ---
 
@@ -37,9 +38,7 @@ It scans prompts and responses for threats in real time before sending them to t
 ## How it works
 
 ```text
-[User via OpenWebUI] ➜ [Rust Proxy] ➜ (Prompt scanned by AIRS)
-                                ➜ [Ollama] ➜ (Response scanned by AIRS)
-                                ➜ [OpenWebUI display]
+[User via OpenWebUI] ➜ [Rust Proxy] ➜ (Prompt scanned by AIRS) ➜ [Ollama] ➜ (Response scanned by AIRS) ➜ [OpenWebUI display]
 ```
 
 ---
@@ -52,7 +51,10 @@ It scans prompts and responses for threats in real time before sending them to t
 | `PANW_PROFILE_ID`   | ✅        | Security profile ID for AIRS   |
 | `PANW_PROFILE_NAME` | ✅        | Security profile name for AIRS |
 
-You can use a `.env` file to define these locally.
+You have to create a `.env` file to define these locally. Please create the file with value :
+PANW_X_PAN_TOKEN=[YOUR TOKEN]
+PANW_PROFILE_ID=[Retrieve your Profile ID in SCM]
+PANW_PROFILE_NAME=[The profile name created by you]
 
 ---
 
@@ -77,11 +79,8 @@ PANW_PROFILE_NAME=your-profile-name
 
 ### 3. Add your CA certificate if required
 
-If your network uses TLS inspection, export your CA cert and save it as:
+If your network uses TLS inspection, Please change of networks. I didnt have the time for the moment to accept any TLS inspection inside CARGO during the compilation.
 
-```
-decryption_ca.crt
-```
 
 ### 4. Build the project with Docker
 
@@ -120,10 +119,9 @@ Then open [http://localhost:8080](http://localhost:8080) to access OpenWebUI.
 
 ## 📣 TODO
 
-* [ ] Add support for streaming responses from Ollama via SSE
 * [ ] Add retry & timeout policy for model and AIRS requests
 * [ ] Add unit tests and error tracing
-
+* [ ] Find the correct way to bypass the tls inspection during the cargo build to download prerequisite mod
 ---
 
 ## 🤝 Contributing
