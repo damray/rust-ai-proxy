@@ -81,20 +81,28 @@ PANW_PROFILE_NAME=your-profile-name
 
 If your network uses TLS inspection, Please change of networks. I didnt have the time for the moment to accept any TLS inspection inside CARGO during the compilation.
 
+### 4. Launch the initial script
 
-### 4. Build the project with Docker
+```bash
+chmod +x init_models.sh
+./init_models.sh
+chmod +x set_env.sh
+./set_env.sh
+```
+
+### 5. Build the project with Docker
 
 ```bash
 docker-compose build rust_ai_proxy
 ```
 
-### 5. Launch the stack
+### 6. Launch the stack
 
 ```bash
 docker-compose up -d
 ```
 
-### 6. Open your browser
+### 7. Open your browser
 
 Access OpenWebUI via:
 
