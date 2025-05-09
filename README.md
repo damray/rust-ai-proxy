@@ -37,8 +37,19 @@ It scans prompts and responses for threats in real time before sending them to t
 
 ## How it works
 
+
 ```text
-[User via OpenWebUI] ➜ [Rust Proxy] ➜ (Prompt scanned by AIRS) ➜ [Ollama] ➜ (Response scanned by AIRS) ➜ [OpenWebUI display]
+[User via OpenWebUI]
+         ⬇
+[Rust Proxy]
+  ├─🔍 Scan prompt via AIRS
+         ⬇
+      [Ollama]
+         ⬇
+[Rust Proxy]
+  ├─🔍 Scan response via AIRS
+        ⬇
+[OpenWebUI display]
 ```
 
 ---
@@ -84,11 +95,10 @@ If your network uses TLS inspection, Please change of networks. I didnt have the
 ### 4. Launch the initial script
 
 ```bash
-chmod +x init_models.sh
-./init_models.sh
-chmod +x set_env.sh
-./set_env.sh
+chmod +x init_models.sh && ./init_models.sh
+chmod +x set_env.sh && ./set_env.sh
 ```
+i created local env just in case you want to debug locally the cargo and not passing the env in the docker-compose directly but you can if you prefer
 
 ### 5. Build the project with Docker
 
